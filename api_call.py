@@ -1,13 +1,12 @@
 import requests
 # Here we define our query as a multi-line string
 query = '''
-query ($id: Int) { # Define which variables will be used in the query (id)
-  Media (id: $id, type: ANIME) { # Insert our variables into the query arguments (id) (type: ANIME is hard-coded in the query)
-    id
-    title {
-      romaji
-      english
-      native
+query ($name: String) { # Define which variables will be used in the query (id)
+  MediaList (userName: $name) { # Insert our variables into the query arguments (id) (type: ANIME is hard-coded in the query)
+    media{
+      title{
+        romaji
+      }
     }
   }
 }
@@ -15,7 +14,7 @@ query ($id: Int) { # Define which variables will be used in the query (id)
 
 # Define our query variables and values that will be used in the query request
 variables = {
-    'id': 1
+    'name': "rafay"
 }
 
 url = 'https://graphql.anilist.co'
