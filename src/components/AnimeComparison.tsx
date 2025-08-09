@@ -5,48 +5,51 @@ import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
-
-interface AnimeComparisonData {
-  user1: string;
-  user1Anime: string[];
-  user2: string;
-  user3: string;
-  user2_3_Anime: string[];
-  animeDifferenceCount: number;
-  animeDifference: string[];
-}
+import { compareUsersAnime, CompareUsersAnimeResult } from "@/lib/diffAnimeService";
+import CollapsibleAnimeList from "./CollapsibleAnimeList";
 
 export default function AnimeComparison() {
-  const [user1, setUser1] = useState("");
-  const [user2, setUser2] = useState("");
-  const [user3, setUser3] = useState("");
+  const [users1, setUsers1] = useState<string[]>([""]);
+  const [users2, setUsers2] = useState<string[]>([""]);
 
-  const [data, setData] = useState<AnimeComparisonData | null>(null);
+  const [data, setData] = useState<CompareUsersAnimeResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function fetchAnimeComparison() {
+  async function compareCurrentUsersAnime() {
     setLoading(true);
     setError(null);
-    setData(null);
-
     try {
-      const params = new URLSearchParams({
-        user1,
-        user2,
-        user3,
-      });
-
-      const res = await fetch(`/api/anime-comparison?${params.toString()}`);
-      if (!res.ok) throw new Error("Failed to fetch data");
-      const json = await res.json();
-      setData(json);
+      const result = await compareUsersAnime(users1, users2);
+      setData(result);
     } catch (err) {
       setError((err as Error).message);
     } finally {
       setLoading(false);
     }
   }
+
+  const handleUser1Change = (index: number, value: string) => {
+    const newUsers = [...users1];
+    newUsers[index] = value;
+    setUsers1(newUsers);
+    setData(null);
+  };
+
+  const handleUser2Change = (index: number, value: string) => {
+    const newUsers = [...users2];
+    newUsers[index] = value;
+    setUsers2(newUsers);
+    setData(null);
+  };
+
+  const removeUser1 = (index: number) => {
+    setUsers1(users1.filter((_, i) => i !== index));
+  };
+
+  const removeUser2 = (index: number) => {
+    setUsers2(users2.filter((_, i) => i !== index));
+  };
 
   return (
     <Box
@@ -61,30 +64,45 @@ export default function AnimeComparison() {
       </Typography>
 
       <Box display="flex" flexDirection="column" gap={3} mb={4}>
-        <TextField
-          label="User 1"
-          value={user1}
-          onChange={(e) => setUser1(e.target.value)}
-          placeholder="Enter user 1"
-        />
-        <TextField
-          label="User 2"
-          value={user2}
-          onChange={(e) => setUser2(e.target.value)}
-          placeholder="Enter user 2"
-        />
-        <TextField
-          label="User 3"
-          value={user3}
-          onChange={(e) => setUser3(e.target.value)}
-          placeholder="Enter user 3"
-        />
+        {users1.map((user, i) => (
+          <Box key={i} display="flex" alignItems="center" gap={1} mb={1}>
+            <TextField
+              value={user}
+              onChange={(e) => handleUser1Change(i, e.target.value)}
+              fullWidth
+            />
+            {users1.length > 1 && (
+              <Button color="error" onClick={() => removeUser1(i)}>
+                Remove
+              </Button>
+            )}
+          </Box>
+        ))}
+
+        <Button onClick={() => setUsers1([...users1, ""])}>Add User 1</Button>
+
+        {users2.map((user, i) => (
+          <Box key={i} display="flex" alignItems="center" gap={1} mb={1}>
+            <TextField
+              value={user}
+              onChange={(e) => handleUser2Change(i, e.target.value)}
+              fullWidth
+            />
+            {users2.length > 1 && (
+              <Button color="error" onClick={() => removeUser2(i)}>
+                Remove
+              </Button>
+            )}
+          </Box>
+        ))}
+
+        <Button onClick={() => setUsers2([...users2, ""])}>Add User 2</Button>
       </Box>
 
       <Button
         variant="contained"
         fullWidth
-        onClick={fetchAnimeComparison}
+        onClick={compareCurrentUsersAnime}
         disabled={loading}
         size="large"
       >
@@ -106,31 +124,28 @@ export default function AnimeComparison() {
       {data && (
         <Box mt={4} color="text.primary">
           <Typography mb={1}>
-            <strong>{user1}</strong>&apos;s completed anime count: {data.user1Anime.length}
+            <strong>{users1.join(", ")}</strong>&apos;s completed anime count: {data.users1Anime.length}
           </Typography>
           <Typography mb={1}>
-            <strong>{user2}</strong> &amp; <strong>{user3}</strong> completed anime count:{" "}
-            {data.user2_3_Anime.length}
+            <strong>{users2.join(", ")}</strong> completed anime count:{" "}
+            {data.users2Anime.length}
           </Typography>
-          <Typography mb={2}>Difference count: {data.animeDifferenceCount}</Typography>
 
-          <Typography variant="h6" mb={1}>
-            Anime unique to {data.user1}:
-          </Typography>
-          <Box
-            component="ul"
-            sx={{
-              listStyleType: "disc",
-              paddingLeft: 3,
-              maxHeight: 256,
-              overflowY: "auto",
-              margin: 0,
-            }}
-          >
-            {data.animeDifference.map((anime: string, i: number) => (
-              <li key={i}>{anime}</li>
-            ))}
-          </Box>
+          <CollapsibleAnimeList
+            title={`Anime unique to ${users1.join(", ")}`}
+            animeList={data.users1Difference}
+          />
+
+          <CollapsibleAnimeList
+            title={`Anime unique to ${users2.join(", ")}`}
+            animeList={data.users2Difference}
+          />
+
+          <CollapsibleAnimeList
+            title="Anime in common"
+            animeList={data.commonAnime}
+          />
+
         </Box>
       )}
     </Box>

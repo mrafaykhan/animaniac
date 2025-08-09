@@ -1,5 +1,27 @@
 import { NextResponse } from "next/server";
 
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+
+    const user = searchParams.get("user") ?? "rafay";
+
+    const userAnime = await animeForUser(user);
+
+    return NextResponse.json({
+      user: user,
+      userAnimes: [...userAnime],
+      animeCount: userAnime.size
+    });
+  } catch (error) {
+    console.error("Error in API route:", error);
+    return NextResponse.json(
+      { error: (error as Error).message },
+      { status: 500 }
+    );
+  }
+}
+
 interface AniListResponse {
   data: {
     MediaListCollection: {
@@ -16,42 +38,7 @@ interface AniListResponse {
   };
 }
 
-export async function GET(request: Request) {
-  try {
-    const { searchParams } = new URL(request.url);
-
-    const user1 = searchParams.get("user1") ?? "rafay";
-    const user2 = searchParams.get("user2") ?? "wasaucy";
-    const user3 = searchParams.get("user3") ?? "rayaanb";
-
-    const user1Anime = await animesetFromUser(user1);
-
-    const user2Anime = await animesetFromUser(user2);
-
-    const user3Anime = await animesetFromUser(user3);
-
-    const user2_3_Anime = new Set([...user2Anime, ...user3Anime]);
-    const animeDifference = [...user1Anime].filter(anime => !user2_3_Anime.has(anime));
-
-    return NextResponse.json({
-      user1: user1.toUpperCase(),
-      user1Anime: [...user1Anime],
-      user2: user2.toUpperCase(),
-      user3: user3.toUpperCase(),
-      user2_3_Anime: [...user2_3_Anime],
-      animeDifferenceCount: animeDifference.length,
-      animeDifference,
-    });
-  } catch (error) {
-    console.error("Error in API route:", error);
-    return NextResponse.json(
-      { error: (error as Error).message },
-      { status: 500 }
-    );
-  }
-}
-
-async function animesetFromUser(username: string): Promise<Set<string>> {
+async function animeForUser(username: string): Promise<Set<string>> {
   const query = `
     query ($name: String) {
       MediaListCollection(userName: $name, type: ANIME, status: COMPLETED, sort: MEDIA_TITLE_ENGLISH) {
