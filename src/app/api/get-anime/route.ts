@@ -44,6 +44,7 @@ async function animeForUser(username: string): Promise<Set<string>> {
       MediaListCollection(userName: $name, type: ANIME, status: COMPLETED, sort: MEDIA_TITLE_ENGLISH) {
         lists {
           entries {
+            score(format: POINT_10)
             media {
               title {
                 english
