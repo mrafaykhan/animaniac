@@ -1,3 +1,5 @@
+import { fetchUserAnimeSet } from "./getAnimeService";
+
 export interface CompareUsersAnimeResult {
     users1Anime: string[];
     users2Anime: string[];
@@ -13,7 +15,7 @@ export async function compareUsersAnime(users1: string[], users2: string[]): Pro
     // Fetch anime sets for all users
     for (const user of users1) {
         if (user.trim() !== "") {
-            const userAnimes: Set<string> = await getUserAnimeFromApi(user);
+            const userAnimes: Set<string> = await fetchUserAnimeSet(user);
             for (const anime of userAnimes) {
                 combined1Set.add(anime);
             }
@@ -21,7 +23,7 @@ export async function compareUsersAnime(users1: string[], users2: string[]): Pro
     }
     for (const user of users2) {
         if (user.trim() !== "") {
-            const userAnimes: Set<string> = await getUserAnimeFromApi(user);
+            const userAnimes: Set<string> = await fetchUserAnimeSet(user);
             for (const anime of userAnimes) {
                 combined2Set.add(anime);
             }

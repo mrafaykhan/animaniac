@@ -1,7 +1,6 @@
 "use client";
 import React from "react";
 import AnimeComparison from "@/components/AnimeComparison";
-import Button from "@mui/material/Button";
 import AboutInfoButton from "@/components/AboutInfoButton";
 
 export default function Home() {

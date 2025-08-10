@@ -7,13 +7,13 @@ export default function Navigation() {
   return (
     <AppBar position="static">
       <Toolbar>
-        <Button color="inherit" component={Link} href="/">
+        <Button color="inherit" component={Link} href="/" sx={{ mx: 3 }}>
           Home
         </Button>
-        <Button color="inherit" component={Link} href="/ani-gpt">
+        <Button color="inherit" component={Link} href="/ani-gpt" sx={{ mx: 3 }}>
           Anime GPT
         </Button>
-        <Button color="inherit" component={Link} href="/ani-diff">
+        <Button color="inherit" component={Link} href="/ani-diff" sx={{ mx: 3 }}>
           Anime Diff
         </Button>
       </Toolbar>

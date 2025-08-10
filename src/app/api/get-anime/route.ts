@@ -5,14 +5,11 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
 
     const user = searchParams.get("user") ?? "rafay";
+    const sort = searchParams.get("sort") ?? "MEDIA_TITLE_ENGLISH";
 
-    const userAnime = await animeForUser(user);
+    const rawResponse = await fetchUserAnimeRaw(user, sort);
 
-    return NextResponse.json({
-      user: user,
-      userAnimes: [...userAnime],
-      animeCount: userAnime.size
-    });
+    return NextResponse.json(rawResponse);
   } catch (error) {
     console.error("Error in API route:", error);
     return NextResponse.json(
@@ -22,7 +19,7 @@ export async function GET(request: Request) {
   }
 }
 
-interface AniListResponse {
+export interface AniListResponse {
   data: {
     MediaListCollection: {
       lists: {
@@ -38,10 +35,10 @@ interface AniListResponse {
   };
 }
 
-async function animeForUser(username: string): Promise<Set<string>> {
+async function fetchUserAnimeRaw(username: string, sort: string = "MEDIA_TITLE_ENGLISH"): Promise<AniListResponse> {
   const query = `
-    query ($name: String) {
-      MediaListCollection(userName: $name, type: ANIME, status: COMPLETED, sort: MEDIA_TITLE_ENGLISH) {
+    query ($name: String, $sort: [MediaListSort]) {
+      MediaListCollection(userName: $name, type: ANIME, status: COMPLETED, sort: $sort) {
         lists {
           entries {
             score(format: POINT_10)
@@ -62,7 +59,7 @@ async function animeForUser(username: string): Promise<Set<string>> {
     headers: {
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({ query, variables: { name: username } })
+    body: JSON.stringify({ query, variables: { name: username, sort: [sort] } })
   });
 
   if (!response.ok) {
@@ -71,18 +68,5 @@ async function animeForUser(username: string): Promise<Set<string>> {
 
   const data: AniListResponse = await response.json();
 
-  if (!data.data || !data.data.MediaListCollection) {
-    throw new Error(`No data found for user ${username}`);
-  }
-
-  const entries = data.data.MediaListCollection.lists[0]?.entries || [];
-  const animeSet = new Set<string>();
-
-  for (const anime of entries) {
-    if (anime.media?.title?.english) {
-      animeSet.add(anime.media.title.english);
-    }
-  }
-
-  return animeSet;
+  return data;
 }
